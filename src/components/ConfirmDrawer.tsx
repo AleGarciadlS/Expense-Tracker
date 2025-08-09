@@ -33,7 +33,8 @@ export function ConfirmDrawer({
       setCategories(active)
       if (!active.find((c) => c.id === categoryId) && active.length) setCategoryId(active[0].id)
     })()
-  }, [categoryId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const lowConfidence = (ocr?.confidence ?? 0) < 0.6 || !ocr?.amountCents || !ocr?.date
 
@@ -51,7 +52,6 @@ export function ConfirmDrawer({
           const r = await getRate(date)
           rateNum = r.UYU_per_USD
         } catch {
-          // We fallback to last known rate inside getRate; if none, block save to avoid wrong math
           alert('No exchange rate available yet. Please add a USD receipt after the first successful fetch, or set up the proxy.')
           setBusy(false)
           return
@@ -71,7 +71,7 @@ export function ConfirmDrawer({
         native_amount_cents: amountCents,
         converted_amount_cents: convertedUYU,
         locked_rate: rateNum,
-        // For now, single-category 100% split; amount stored in converted currency to match charts
+        // Single-category 100% split for now
         category_splits: [{ category_id: categoryId, percent: 100, amount_cents: convertedUYU }],
         notes: '',
         image_ref: undefined,
@@ -135,7 +135,13 @@ export function ConfirmDrawer({
                 setCurrency('UYU')
                 setAmountStr('')
               }}
-              style={{ padding: '0.25rem 0.5rem', border: '1px solid #475569', borderRadius: '0.5rem', background: 'transparent', color: '#e2e8f0' }}
+              style={{
+                padding: '0.25rem 0.5rem',
+                border: '1px solid #475569',
+                borderRadius: '0.5rem',
+                background: 'transparent',
+                color: '#e2e8f0',
+              }}
             >
               Switch to manual entry
             </button>
@@ -188,7 +194,7 @@ export function ConfirmDrawer({
           <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', gridColumn: '1 / span 2' }}>
             Category
             <select
-              style={{ padding: '0.5rem', borderRadius: '0.5rem', background: '#0b1222', border: '1px solid '#475569', color: '#e2e8f0' }}
+              style={{ padding: '0.5rem', borderRadius: '0.5rem', background: '#0b1222', border: '1px solid #475569', color: '#e2e8f0' }}
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
             >
