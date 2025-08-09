@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "package.json", "use": "@vercel/static-build" },
+    { "src": "api/bcu-proxy.ts", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/bcu-proxy", "dest": "/api/bcu-proxy.ts" }
+  ]
+}
