@@ -77,8 +77,8 @@ export function ConfirmDrawer({open,setOpen,file,ocr}:{open:boolean; setOpen:(v:
 
   if(!open) return null
   return (
-    <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'flex-end', justifyContent:'center'}}>
-      <div style={{background:'#1f2937', width:'100%', maxWidth:'36rem', padding:'1rem', borderRadius:'1rem', border:'1px solid #334155'}}>
+    <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'flex-end', justifyContent:'center', zIndex: 9999, //}}>
+      <div style={{background:'#1f2937', width:'100%', maxWidth:'36rem', padding:'1rem', borderRadius:'1rem', border:'1px solid #334155',zIndex: 10000, //}}>
         <h3 style={{fontSize:'1rem', fontWeight:600, marginBottom:'0.75rem'}}>
           Confirm expense {lowConfidence && <span style={{marginLeft:'0.5rem', color:'#fbbf24', fontSize:'0.875rem'}}>Low confidence — you can type manually</span>}
         </h3>
