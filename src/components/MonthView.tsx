@@ -5,6 +5,8 @@ import { formatCents } from '../utils/format'
 import { useAppStore } from '../state/store'
 import { ReceiptCapture } from './ReceiptCapture'
 import { CategoryPie, TrendLine } from './Charts'
+import { ConfirmDrawer } from './ConfirmDrawer'
+
 
 export function MonthView(){
   const [month, setMonth] = useState(()=> new Date())
@@ -29,7 +31,11 @@ export function MonthView(){
         <div style={{marginLeft:'auto', fontSize:'1.25rem', fontWeight:600}}>{formatCents(total, currencyView)}</div>
       </div>
 
-      <ReceiptCapture/>
+      <div style={{display:'flex', gap:'0.5rem', alignItems:'center'}}>
+        <ReceiptCapture/>
+        {/* Manual entry button */}
+        <ManualEntryButton/>
+      </div>
 
       <ul style={{border:'1px solid #334155', borderRadius:'0.75rem', overflow:'hidden', listStyle:'none', margin:0, padding:0}}>
         {rows.map(r=> (
@@ -52,4 +58,19 @@ export function MonthView(){
       </div>
     </div>
   )
+function ManualEntryButton(){
+  const [open, setOpen] = React.useState(false)
+  return (
+    <>
+      <button
+        style={{padding:'0.5rem 1rem', borderRadius:'0.75rem', border:'1px solid #475569', background:'transparent', color:'#e2e8f0'}}
+        onClick={()=>setOpen(true)}
+      >
+        Add manual expense
+      </button>
+      <ConfirmDrawer open={open} setOpen={setOpen} file={null} ocr={{}} />
+      </>
+    )
+  }
+  
 }
