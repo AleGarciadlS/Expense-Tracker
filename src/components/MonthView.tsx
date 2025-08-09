@@ -7,20 +7,35 @@ import { ReceiptCapture } from './ReceiptCapture'
 import { CategoryPie, TrendLine } from './Charts'
 import { ConfirmDrawer } from './ConfirmDrawer'
 
-
 export function MonthView(){
   const [month, setMonth] = useState(()=> new Date())
   const [rows, setRows] = useState<Expense[]>([])
   const { currencyView } = useAppStore()
 
+  // Load expenses for the selected month
   useEffect(()=>{ (async()=>{
     const y = month.getFullYear(); const m = String(month.getMonth()+1).padStart(2,'0')
     const prefix = `${y}-${m}`
-    const all = await db.expenses.where('receipt_date').between(`${prefix}-01`, `${prefix}-31`, true, true).toArray()
+    const all = await db.expenses
+      .where('receipt_date')
+      .between(`${prefix}-01`, `${prefix}-31`, true, true)
+      .toArray()
     setRows(all)
   })() }, [month])
 
-  const total = useMemo(()=> rows.reduce((a,r)=> a + (currencyView==='UYU' ? r.converted_amount_cents : (r.native_currency==='USD'? r.native_amount_cents : Math.round(r.converted_amount_cents / (r.locked_rate||1)))), 0), [rows, currencyView])
+  // Category id -> name map (for showing category next to date)
+  const [catMap, setCatMap] = useState<Record<string,string>>({})
+  useEffect(()=>{ (async()=>{
+    const cats = await db.categories.toArray()
+    setCatMap(Object.fromEntries(cats.map(c=>[c.id,c.name])))
+  })() },[])
+
+  // Month total following the currency toggle
+  const total = useMemo(()=> rows.reduce((a,r)=> {
+    if (currencyView==='UYU') return a + r.converted_amount_cents
+    // USD view: show native if USD, otherwise convert back using locked_rate
+    return a + (r.native_currency==='USD' ? r.native_amount_cents : Math.round(r.converted_amount_cents / (r.locked_rate||1)))
+  }, 0), [rows, currencyView])
 
   return (
     <div style={{display:'flex', flexDirection:'column', gap:'1rem'}}>
@@ -31,33 +46,50 @@ export function MonthView(){
         <div style={{marginLeft:'auto', fontSize:'1.25rem', fontWeight:600}}>{formatCents(total, currencyView)}</div>
       </div>
 
+      {/* Photo + Manual buttons */}
       <div style={{display:'flex', gap:'0.5rem', alignItems:'center'}}>
         <ReceiptCapture/>
-        {/* Manual entry button */}
         <ManualEntryButton/>
       </div>
 
+      {/* List of expenses */}
       <ul style={{border:'1px solid #334155', borderRadius:'0.75rem', overflow:'hidden', listStyle:'none', margin:0, padding:0}}>
         {rows.map(r=> (
           <li key={r.id} style={{padding:'0.75rem', display:'flex', alignItems:'center', gap:'0.75rem', borderTop:'1px solid #334155'}}>
             <div style={{flex:1}}>
               <div style={{fontWeight:600}}>{r.merchant}</div>
-              <div style={{fontSize:'0.875rem', color:'#94a3b8'}}>{r.receipt_date}</div>
+              <div style={{fontSize:'0.875rem', color:'#94a3b8'}}>
+                {r.receipt_date}
+                {r.category_splits?.[0]?.category_id
+                  ? ` • ${catMap[r.category_splits[0].category_id] || 'Uncategorized'}`
+                  : ''}
+              </div>
             </div>
             <div style={{textAlign:'right', fontWeight:600, minWidth:'8rem'}}>
-              {formatCents((currencyView==='UYU'? r.converted_amount_cents : (r.native_currency==='USD'? r.native_amount_cents : Math.round(r.converted_amount_cents/(r.locked_rate||1)))), currencyView)}
+              {formatCents(
+                (currencyView==='UYU'
+                  ? r.converted_amount_cents
+                  : (r.native_currency==='USD'
+                      ? r.native_amount_cents
+                      : Math.round(r.converted_amount_cents/(r.locked_rate||1)))),
+                currencyView
+              )}
             </div>
           </li>
         ))}
         {rows.length===0 && <li style={{padding:'1rem', textAlign:'center', color:'#94a3b8'}}>No expenses yet this month</li>}
       </ul>
 
+      {/* Charts */}
       <div style={{display:'grid', gap:'1rem', gridTemplateColumns:'1fr 1fr'}}>
         <CategoryPie rows={rows}/>
         <TrendLine rows={rows}/>
       </div>
     </div>
   )
+}
+
+/** Manual entry button that reuses the same confirmation form (no photo/OCR). */
 function ManualEntryButton(){
   const [open, setOpen] = React.useState(false)
   return (
@@ -69,8 +101,6 @@ function ManualEntryButton(){
         Add manual expense
       </button>
       <ConfirmDrawer open={open} setOpen={setOpen} file={null} ocr={{}} />
-      </>
-    )
-  }
-  
+    </>
+  )
 }
