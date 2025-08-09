@@ -14,6 +14,19 @@ class AppDB extends Dexie {
       categories: 'id, name, active',
       budgets: 'id, month',
       audit: 'id, expense_id, timestamp'
+    }).upgrade(() => { /* no-op for now */ })
+
+    // Seed default categories on first create
+    this.on('populate', async () => {
+      await this.categories.bulkAdd([
+        { id: 'groceries', name: 'Groceries', active: true },
+        { id: 'utilities', name: 'Utilities', active: true },
+        { id: 'medicine',  name: 'Medicine',  active: true },
+        { id: 'transport', name: 'Transport', active: true },
+        { id: 'leisure',   name: 'Leisure',   active: true },
+        { id: 'home',      name: 'Home',      active: true },
+        { id: 'other',     name: 'Other',     active: true },
+      ])
     })
   }
 }
