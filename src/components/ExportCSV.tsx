@@ -1,6 +1,7 @@
 import React from 'react'
 import { useAppStore } from '../state/store'
 import { db } from '../db'
+import { Expense } from '../models'
 
 export function CurrencyToggle(){
   const { currencyView, setCurrencyView } = useAppStore()
@@ -15,9 +16,17 @@ export function CurrencyToggle(){
 
 export function ExportCSV(){
   async function onExport(){
-    const rows = await db.expenses.toArray()
+    const rows: Expense[] = await db.expenses.toArray()
     const header = ['merchant','receipt_date','native_currency','native_amount','converted_amount','locked_rate']
-    const csv = [header.join(',')].concat(rows.map(r=> [r.merchant, r.receipt_date, r.native_currency, (r.native_amount_cents/100).toFixed(2), (r.converted_amount_cents/100).toFixed(2), r.locked_rate].join(','))).join('\n')
+    const csv = [header.join(',')].concat(
+      rows.map((r: Expense) =>
+        [r.merchant, r.receipt_date, r.native_currency,
+         (r.native_amount_cents/100).toFixed(2),
+         (r.converted_amount_cents/100).toFixed(2),
+         r.locked_rate].join(',')
+      )
+    ).join('\n')
+
     const blob = new Blob([csv],{type:'text/csv'})
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
